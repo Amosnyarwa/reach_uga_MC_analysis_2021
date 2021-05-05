@@ -415,6 +415,7 @@ df_solve_problems %>%
   theme_bw()+
   theme(text= element_text(size= 12), legend.title= element_blank())+
   ylim(0, 60)+
+  theme(plot.title = element_text(size = rel(1.5)), text= element_text(size= 12), legend.title= element_blank(), axis.text.x = element_text(angle = 45, hjust = 1))+
   labs(title= "Proportion of respondents by ability to solve difficult problems", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= "% of ability to solve difficult problems")
   # labs(x= element_blank() , y= "% of ability to solve difficult problems")
 
@@ -432,6 +433,7 @@ df_interest_pleasure %>%
   theme_bw()+
   theme(text= element_text(size= 12), legend.title= element_blank())+
   ylim(0, 50)+
+  theme(plot.title = element_text(size = rel(1.5)), text= element_text(size= 12), legend.title= element_blank(), axis.text.x = element_text(angle = 45, hjust = 1))+
   labs(title= "Proportion of respondents by pleasure in doing things", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= "% of interest or pleasure in doing things")
   # labs(x= element_blank() , y= "% of interest or pleasure in doing things")
 
@@ -449,7 +451,7 @@ df_tired_little_energy %>%
   theme_bw()+
   theme(plot.title = element_text(size = rel(1.5)), text= element_text(size= 12), legend.title= element_blank(), axis.text.x = element_text(angle = 45, hjust = 1))+
   ylim(0, 60)+
-  labs(title= "Proportion of respondents by level of feeling tired or little enrgy", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= "% of respondents who felt tired or had little energy")
+  labs(title= "Proportion of respondents by level of feeling tired or little energy", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= "% of respondents who felt tired or had little energy")
   
 
 
