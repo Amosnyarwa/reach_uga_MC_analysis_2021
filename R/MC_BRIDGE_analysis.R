@@ -1,7 +1,8 @@
 # Loading required packages
 library(tidyverse)
 library(scales)
-
+library(RColorBrewer)
+require("gridExtra")
 # Average monthly income (in UGX) of target groups
 df_income <- tibble(Status= c("Host", "Refugee", "Host", "Refugee"),
                     Average_monthly_income= c(126808, 68647, 138666, 100470),
@@ -11,43 +12,44 @@ df_income %>%
   ggplot(aes(fill= Implementation_phase, x= Status, y= Average_monthly_income)) +
   geom_bar(position = "dodge", stat = "identity", width = 0.5)+
   scale_y_continuous(labels= scales::comma)+
-  # scale_y_continuous(breaks= NULL)+
-  geom_text(aes(label= format(Average_monthly_income, nsmall=0, big.mark=","), vjust= -.3, hjust= .5),
+  geom_text(aes(label= format(Average_monthly_income, nsmall=0, big.mark=","), vjust= -.5, hjust= .5),
             position = position_dodge2(width = 0.5))+
   scale_fill_manual(values= c("#303434", "#00aeef"))+
   theme_bw()+
-  theme(plot.title = element_text(size = rel(1.5)), text= element_text(size= 12), legend.title= element_blank(), axis.text.y = element_blank())+
-  # ylim(0, 150000)+
   theme(legend.title = element_blank(),
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.ticks.y = element_blank())+
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        text= element_text(size= 12))+
   labs(title= "Average monthly income (in UGX) of target groups", subtitle = "n baseline: 650, n endline:517", x= element_blank(), y= element_blank())
 
 
 # Type of agricultural enterprises or agricultural activities
 
-df_agric_enterprise <- tibble(Response= c("Crop_farming", "Crop_farming", "Vegetable_growing", "Vegetable_growing", "Agricultural_produce_selling", "Agricultural_produce_selling", "Livestock_keeping", "Livestock_keeping", "Buying_and_selling_livestock", "Buying_and_selling_livestock", "Poultry_keeping", "Poultry_keeping", "Maize_milling", "Maize_milling", "Others", "Others"),
+df_agric_enterprise <- tibble(Response= c("Crop farming", "Crop farming", "Vegetable growing", "Vegetable growing", "Agricultural produce selling", "Agricultural produce selling", "Livestock keeping", "Livestock keeping", "Buying and selling livestock", "Buying and selling livestock", "Poultry keeping", "Poultry keeping", "Maize milling", "Maize milling", "Others", "Others"),
                               Percentage_respondents= c(41, 44, 24, 25, 13, 12, 8, 8, 3, 3, 6, 4, 3, 1, 3, 1),
                               Phase= c("Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline"))    
 
 
 df_agric_enterprise %>%
-  mutate(
-    Response= str_replace_all(Response, "_", " "),
-    Response= str_to_sentence(Response)
-  ) %>% 
-  ggplot(aes(fill= Phase, x= fct_reorder(Response, -Percentage_respondents) , y= Percentage_respondents)) +
+  arrange(Percentage_respondents) %>% 
+  mutate(Response= factor(Response, levels = c("Others", "Maize milling", "Buying and selling livestock", "Poultry keeping", "Livestock keeping", "Agricultural produce selling", "Vegetable growing", "Crop farming"))) %>% 
+  
+  ggplot(aes(fill= Phase, x= reorder(Response, Percentage_respondents) , y= Percentage_respondents)) +
   geom_bar(position = "dodge", stat = "identity", width = 0.8)+
-  scale_y_continuous(labels = scales::comma)+
-  theme(legend.title = element_blank(),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),)+
   scale_fill_manual(values= c("#303434", "#00aeef"))+
   theme_bw()+
-  theme(plot.title = element_text(size = rel(1.5)), text= element_text(size= 12), legend.title= element_blank(), axis.text.x = element_text(angle = 45, hjust = 1))+
   ylim(0, 50)+
-  labs(title= "Percentage of respondents by agricultural enterprises or activities practiced", subtitle = "n baseline: 326, n endline:527", x= element_blank(), y= "% of respondents")
+  scale_y_continuous(labels= scales::percent_format(scale= 1))+
+  scale_y_continuous(labels = function(x) paste0(x, "%"), breaks = seq(0, 40, by = 5))+
+  coord_flip()+
+  theme(legend.title = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        text= element_text(size= 12))+
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 15))+
+  labs(title= "Percentage of respondents by agricultural enterprises \n or activities practiced", subtitle = "n baseline: 326, n endline:527", x= element_blank(), y= element_blank())
   
 
 # Level of practicing agricultural production
@@ -61,9 +63,9 @@ df_agric_production_level <- tibble(Response= c("Commercial", "Subsistence", "Co
 df_agric_production_level %>%
   ggplot(aes(fill= Response, x= fct_reorder(Phase, -Percentage_respondents) , y= Percentage_respondents)) +
   geom_bar(position = "stack", stat = "identity", width = 0.5)+
-  geom_text(aes(label = paste0(Percentage_respondents,"%")),
-            position = position_stack(vjust = 0.5), size = 5)+
-  scale_y_continuous(breaks= NULL)+
+  geom_text(aes(label = paste0(Percentage_respondents,"%"), color= "ffffff"),
+            position = position_stack(vjust = 0.5), size = 5, show.legend = FALSE)+
+  scale_color_manual(values = c("white", "black"))+
   scale_fill_manual(values= c("#303434", "#00aeef"))+
   theme_bw()+
   theme(text= element_text(size= 12), legend.title= element_blank())+
@@ -71,7 +73,9 @@ df_agric_production_level %>%
   theme(legend.title = element_blank(),
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.ticks.y = element_blank())+
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        text= element_text(size= 12))+
   labs(title= "Proportion of respondents by type of agricultural production", subtitle = "n baseline: 326, n endline:527", x= element_blank(), y= element_blank())
 
   
@@ -82,7 +86,9 @@ df_amount_agric_products_produced <- tibble(Response= c("Simsim", "Simsim", "Gro
                                    Phase= c("Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline" ))
 
 df_amount_agric_products_produced %>%
-  ggplot(aes(fill= Phase, x= fct_reorder(Response, -Average_amount_kgs), y= Average_amount_kgs)) +
+  arrange(Average_amount_kgs) %>% 
+  mutate(Response= factor(Response, levels = c("Others", "Beans", "Maize", "Groundnuts", "Simsim"))) %>% 
+  ggplot(aes(fill= Phase, x= Response, y= Average_amount_kgs)) +
   geom_bar(position = "dodge", stat = "identity", width = 0.8)+
   scale_y_continuous(labels = scales::comma)+
   theme(legend.title = element_blank())+
@@ -90,7 +96,8 @@ df_amount_agric_products_produced %>%
   theme_bw()+
   theme(text= element_text(size= 12), legend.title= element_blank())+
   ylim(0, 250)+
-  labs(title= "Average total amount (in Kgs) of Agricultural products produced", subtitle = "n baseline: 213, n endline:365", x= element_blank(), y= "Average amount in Kgs")
+  coord_flip()+
+  labs(title= "Average total amount (in Kgs) of agricultural products produced", subtitle = "n baseline: 213, n endline:365", x= element_blank(), y= element_blank())
   
   
 
@@ -100,49 +107,60 @@ df_amount_agric_products_sold <- tibble(Agric_product= c("Simsim", "Simsim", "Gr
                                         Average_amount_UGX= c(65293, 86150, 52501, 71121, 49211, 63214, 0, 105000, 0, 97875),
                                         Phase= c("Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline"))
 
-df_amount_agric_products_sold %>% 
-  ggplot(aes(fill= Phase, x= fct_reorder(Agric_product, -Average_amount_UGX) , y= Average_amount_UGX)) +
+df_amount_agric_products_sold %>%
+  arrange(Average_amount_UGX) %>% 
+  mutate(Agric_product= factor(Agric_product, levels = c("Cotton", "Beans", "Maize", "Groundnuts", "Simsim"))) %>% 
+  ggplot(aes(fill= Phase, x= reorder(Agric_product, Average_amount_UGX) , y= Average_amount_UGX)) +
   geom_bar(position = "dodge", stat = "identity", width = 0.8)+
   scale_y_continuous(labels = comma)+
-  theme(legend.title = element_blank())+
   scale_fill_manual(values= c("#303434", "#00aeef"))+
   theme_bw()+
   theme(text= element_text(size= 12), legend.title= element_blank())+
   ylim(0, 120000)+
-  labs(title= "Average total amount (in UGX) of Agricultural products sold to the market", subtitle = "n baseline: 211, n endline:365", x= element_blank(), y= "Average amount in UGX")
+  theme(legend.title = element_blank(),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        text= element_text(size= 12))+
+  coord_flip()+
+  labs(title= "Average total amount (in UGX) of agricultural products sold \n to the market", subtitle = "n baseline: 211, n endline:365", x= element_blank(), y= "Average amount in UGX")+
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 15))
   
   
 
 # Employment status of surveyed respondents 
 
-df_employment_status <- tibble(Gender= c("Male", "Female", "Male", "Female"),
-                               Percent_employed= c(24.5, 18.1, 26.9, 20.4),
-                               Phase= c("Baseline", "Baseline", "Endline", "Endline"))
+df_employment_status <- tibble(Phase= c("Baseline", "Baseline", "Baseline", "Baseline", "Endline", "Endline", "Endline", "Endline"),
+                               Percent_employed= c(38.8, 25.6, 61.2, 75.4, 24.8, 25.7, 75.2, 74.3),
+                               Agric_prodn_level= c("Commercial", "Commercial", "Subsistence", "Subsistence", "Commercial", "Commercial", "Subsistence", "Subsistence"),
+                               Gender= c("Male", "Female", "Male", "Female", "Male", "Female", "Male", "Female")
+                               )
 
-df_employment_status %>%
-  ggplot(aes(fill= Gender, x= fct_reorder(Phase, -Percent_employed) , y= Percent_employed)) +
-  geom_bar(position = "stack", stat = "identity", width = 0.5)+
+  ggplot(df_employment_status, aes(x= Gender, y= Percent_employed))+
+    geom_col(aes(fill= Agric_prodn_level), position = position_stack(reverse = TRUE))+
+    facet_grid(cols = vars(Phase))+
   geom_text(aes(label = paste0(Percent_employed,"%")),
-            position = position_stack(vjust = 0.5), size = 5)+
-  scale_y_continuous(breaks= NULL)+
-  theme(legend.title = element_blank(),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        axis.ticks = element_blank())+
+            position = position_stack( vjust = 0.5), size = 5, color= "white")+
   scale_fill_manual(values= c("#303434", "#00aeef"))+
   theme_bw()+
-  theme(text= element_text(size= 12), legend.title= element_blank())+
   # ylim(0, 30)+
+  theme(legend.title = element_blank(),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.ticks = element_blank(),
+          text = element_text(size = 12),
+          axis.text.y = element_blank())+
   labs(title= "Proportion of respondents'employment status by gender", subtitle = "n baseline: 212, n endline:365", x= element_blank(), y= element_blank())
 
-# Satisfaction level of surveyed respondents with current employment activity -stacked
+# Satisfaction level of surveyed respondents with current employment activity 
 
 df_satisfaction_level <- tibble(level_satisfaction= c("Very unsatisfied", "Very unsatisfied", "Unsatisfied", "Unsatisfied", "Neutral", "Neutral", "Satisfied", "Satisfied", "Highly satisfied", "Highly satisfied" ),
                                 Percent_satisfaction= c(9, 5, 18, 16, 19, 29, 50, 48, 4, 3),
                                 Phase= c("Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline"))
 
 df_satisfaction_level %>% 
-  ggplot(aes(fill= Phase, x= fct_reorder(level_satisfaction, -Percent_satisfaction) , y= Percent_satisfaction)) +
+  arrange(Percent_satisfaction) %>% 
+  mutate(level_satisfaction= factor(level_satisfaction, levels = c("Very unsatisfied", "Unsatisfied", "Neutral", "Satisfied", "Highly satisfied"))) %>% 
+  ggplot(aes(fill= Phase, x= level_satisfaction, y= Percent_satisfaction)) +
   geom_bar(position = "dodge", stat = "identity", width = 0.8)+
   scale_y_continuous(breaks= NULL)+
   theme(legend.title = element_blank())+
@@ -150,7 +168,9 @@ df_satisfaction_level %>%
   theme_bw()+
   theme(text= element_text(size= 12), legend.title= element_blank())+
   ylim(0, 60)+
-  labs(title= "Proportion of respondents' satisfaction level with current employment activity", subtitle = "n baseline: 43, n endline:93", x= element_blank(), y= "% satisfaction with current employment" )
+  scale_y_continuous(labels= scales::percent_format(scale= 1))+
+  coord_flip()+
+  labs(title= "Proportion of respondents' satisfaction level with \n current employment activity", subtitle = "n baseline: 43, n endline:93", x= element_blank(), y= element_blank())
   # labs(title=paste("Satisfaction level of respondents with current employment activity (n baseline: 654, n endline:517)"), x= element_blank(), y= "% satisfaction with current employment")
   
 
@@ -163,18 +183,20 @@ df_employment_type <- tibble(employment_type= c("Formally employed", "Self emplo
 df_employment_type %>% 
   ggplot(aes(fill= employment_type, x= fct_reorder(Phase, -Percent_employed_by_type) , y= Percent_employed_by_type)) +
   geom_bar(position = "stack", stat = "identity", width = 0.5)+
-  geom_text(aes(label = paste0(Percent_employed_by_type, "%")),
-            position = position_stack(vjust = 0.5), size = 5)+
-  scale_y_continuous(breaks= NULL)+
+  geom_text(aes(label = paste0(Percent_employed_by_type, "%"), color= "ffffff"),
+            position = position_stack(vjust = 0.5), size = 5, show.legend = FALSE )+
+  scale_color_manual(values = c("white", "black"))+
+  # scale_y_continuous(breaks= NULL)+
+  scale_fill_manual(values= c("#303434", "#00aeef"))+
+  theme_bw()+
   theme(legend.title = element_blank(),
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.ticks = element_blank())+
-  scale_fill_manual(values= c("#303434", "#00aeef"))+
-  theme_bw()+
-  theme(text= element_text(size= 12), legend.title= element_blank())+
+        axis.ticks = element_blank(),
+        axis.text.y = element_blank(),
+        text= element_text(size= 12) )+
   # ylim(0, 120)+
-  labs(title= "Proportion of respondents' employment status by type of employment activity", subtitle = "n baseline: 212, n endline:93", x= element_blank(), y= element_blank())
+  labs(title= "Proportion of respondents' employment status by \n type of employment activity", subtitle = "n baseline: 212, n endline:93", x= element_blank(), y= element_blank())
   # labs(x= element_blank() , y= "# of respondents by type of employment ")
 
 # Type of engagement of formally employed respondents
@@ -184,15 +206,20 @@ df_engagement_type <- tibble(type_of_engagement= c("Full time", "Short term", "A
                              Phase= c("Baseline", "Baseline", "Baseline", "Baseline", "Endline", "Endline", "Endline", "Endline"))
 
 df_engagement_type %>%
-  ggplot(aes(fill= Phase, x= fct_reorder(type_of_engagement, -Percent_engagement_type) , y= Percent_engagement_type)) +
-  geom_bar(position = "dodge", stat = "identity")+
+  arrange(Percent_engagement_type) %>% 
+  mutate(type_of_engagement= factor(type_of_engagement, levels = c("Apprenticeship", "Part time", "Full time", "Short term"))) %>% 
+  ggplot(aes(fill= Phase, x= type_of_engagement, y= Percent_engagement_type)) +
+  geom_bar(position = "dodge", stat = "identity", width = 0.8)+
   scale_y_continuous(labels = scales::comma)+
-  theme(legend.title = element_blank())+
   scale_fill_manual(values= c("#303434", "#00aeef"))+
   theme_bw()+
-  theme(text= element_text(size= 12), legend.title= element_blank())+
-  ylim(0, 60)+
-  labs(title= "Proportion of formally employed respondents by type of engagement", subtitle = "n baseline: 45, n endline:70", x= element_blank(), y= "% of respondents by type of engagement")
+  theme(legend.title = element_blank(),
+        text= element_text(size= 12),)+
+  # ylim(0, 60)+
+  scale_y_continuous(labels= scales::percent_format(scale= 1))+
+  scale_y_continuous(labels = function(x) paste0(x, "%"), breaks = seq(0, 60, by = 10))+
+  coord_flip()+
+  labs(title= "Proportion of formally employed respondents by \n type of engagement", subtitle = "n baseline: 45, n endline:70", x= element_blank(), y= element_blank())
   # labs(x= element_blank() , y= "% of respondents by type of engagement")
 
 # Ways of acquiring jobs
@@ -201,36 +228,48 @@ df_acquire_jobs <- tibble(Way_acquire_job= c("Recommended by friend", "Recommend
                           Percent_way_acquire_jobs= c(19, 23, 8, 12, 18, 35, 29, 21, 26, 9),
                           Phase= c("Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline"  ))
 
-df_acquire_jobs %>% 
-  ggplot(aes(fill= Phase, x= fct_reorder(Way_acquire_job, -Percent_way_acquire_jobs) , y= Percent_way_acquire_jobs)) +
+df_acquire_jobs %>%
+  arrange(Percent_way_acquire_jobs) %>% 
+  mutate(Way_acquire_job= factor(Way_acquire_job, levels = c("Others", "Recommended by relative", "Head hunting", "Recommended by friend", "Through apply for various positions"))) %>% 
+  ggplot(aes(fill= Phase, x= Way_acquire_job, y= Percent_way_acquire_jobs)) +
+  geom_bar(position = "dodge", stat = "identity", width = 0.8)+
+  scale_y_continuous(labels = scales::comma)+
+  theme(legend.title = element_blank())+
+  scale_fill_manual(values= c("#303434", "#00aeef"))+
+  theme_bw()+
+  theme(text= element_text(size= 12), 
+        legend.title= element_blank(),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank())+
+  # ylim(0, 40)+
+  scale_y_continuous(labels= scales::percent_format(scale= 1))+
+  scale_y_continuous(labels = function(x) paste0(x, "%"), breaks = seq(0, 40, by = 5))+
+  coord_flip()+
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 15))+
+  labs(title= "Proportion of respondents' ways of acquiring jobs", subtitle = "n baseline: 45, n endline:70", x= element_blank(), y= element_blank())
+  # labs(x= element_blank() , y= "% channels of acquiring jobs")
+
+# Sectors of employment 
+
+df_employment_sector <- tibble(sector_of_employment= c("Manufacturing", "Manufacturing", "Food processing", "Food processing", "Agriculture", "Agriculture", "Services", "Services", "Retail and wholesale", "Retail and wholesale", "Hospitality", "Hospitality", "Others", "Others"),
+                               Percent_employment_sector= c(6, 8, 9, 6, 37, 26, 15, 31, 5, 13, 4, 3, 24, 14),
+                               Phase= c("Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline"))
+
+df_employment_sector %>%
+  arrange(Percent_employment_sector) %>% 
+  mutate(sector_of_employment= factor(sector_of_employment, levels = c("Others", "Hospitality", "Food processing", "Manufacturing", "Retail and wholesale", "Agriculture", "Services"))) %>% 
+  ggplot(aes(fill= Phase, x= sector_of_employment, y= Percent_employment_sector)) +
   geom_bar(position = "dodge", stat = "identity", width = 0.8)+
   scale_y_continuous(labels = scales::comma)+
   theme(legend.title = element_blank())+
   scale_fill_manual(values= c("#303434", "#00aeef"))+
   theme_bw()+
   theme(text= element_text(size= 12), legend.title= element_blank())+
-  ylim(0, 40)+
-  theme(plot.title = element_text(size = rel(1.5)), text= element_text(size= 12), legend.title= element_blank(), axis.text.x = element_text(angle = 45, hjust = 1))+
-  labs(title= "Proportion of respondents' ways of acquiring jobs", subtitle = "n baseline: 45, n endline:70", x= element_blank(), y= "% channels of acquiring jobs")
-  # labs(x= element_blank() , y= "% channels of acquiring jobs")
-
-# Sectors of employment 
-
-df_employment_sector <- tibble(sector_of_employment= c("Manufacturing", "Manufacturing", "Food processing", "Food processing", "Agriculture", "Agriculture", "Services", "Services", "Retail and wholesale", "Retail and wholesale", "Hospitality", "Hospitality", "Other", "Other"),
-                               Percent_employment_sector= c(6, 8, 9, 6, 37, 26, 15, 31, 5, 13, 4, 3, 24, 14),
-                               Phase= c("Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline"))
-
-df_employment_sector %>%
-  ggplot(aes(fill= Phase, x= fct_reorder(sector_of_employment, -Percent_employment_sector) , y= Percent_employment_sector)) +
-  geom_bar(position = "dodge", stat = "identity")+
-  scale_y_continuous(labels = scales::comma)+
-  theme(legend.title = element_blank())+
-  scale_fill_manual(values= c("#303434", "#00aeef"))+
-  theme_bw()+
-  theme(text= element_text(size= 12), legend.title= element_blank())+
-  ylim(0, 40)+
-  theme(plot.title = element_text(size = rel(1.5)), text= element_text(size= 12), legend.title= element_blank(), axis.text.x = element_text(angle = 45, hjust = 1))+
-  labs(title= "Proportion of respondents' sectors of employment", subtitle = "n baseline: 45, n endline:70", x= element_blank(), y= "% respondents' sectors of employment")
+  # ylim(0, 40)+
+  # scale_y_continuous(labels= scales::percent_format(scale= 1))+
+  scale_y_continuous(labels = function(x) paste0(x, "%"), breaks = seq(0, 40, by = 5))+
+  coord_flip()+
+  labs(title= "Proportion of respondents' sectors of employment", subtitle = "n baseline: 45, n endline:70", x= element_blank(), y= element_blank())
   # labs(x= element_blank() , y= "% showing sectors where respondents were employed")
 
 # Number of surveyed respondents that have received training on business management
@@ -241,9 +280,9 @@ df_respondents_received_training <- tibble(Responses= c("Yes", "Yes"),
 
 df_respondents_received_training %>%
   ggplot(aes(fill= Phase, x= fct_reorder(Responses, -Percent_responses) , y= Percent_responses)) +
-  geom_bar(position = "dodge", stat = "identity", width = 0.5)+
+  geom_bar(position = "dodge", stat = "identity", width = 0.4)+
   geom_text(aes(label = paste0(Percent_responses,"%")),
-            position = position_dodge2(width = 0.5), size = 5, vjust= -0.5)+
+            position = position_dodge2(width = 0.4), size = 5, vjust= -0.4)+
   scale_y_continuous(labels = scales::comma)+
   theme_bw()+
   scale_fill_manual(values= c("#303434", "#00aeef"))+
@@ -251,8 +290,9 @@ df_respondents_received_training %>%
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         axis.ticks = element_blank(),
-        axis.text.y = element_blank())+
-  # ylim(0, 200)+
+        axis.text.y = element_blank(),
+        axis.text.x = element_blank())+
+  ylim(0, 80)+
   labs(title= "Proportion of respondents that received training on business management", subtitle = "n baseline: 271, n endline:310", x= element_blank(), y= element_blank())
   # labs(x= element_blank() , y= "# of respondents that received training")
 
@@ -263,22 +303,27 @@ df_training_type <- tibble(type_of_training= c("Business record keeping", "Busin
                            Phase= c("Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline"))
 
 df_training_type %>% 
-  ggplot(aes(fill= Phase, x= fct_reorder(type_of_training, -Number_trained_by_type) , y= Number_trained_by_type)) +
+  ggplot(aes(fill= Phase, x= reorder(type_of_training, Number_trained_by_type) , y= Number_trained_by_type)) +
   geom_bar(position = "dodge", stat = "identity")+
   scale_y_continuous(labels = scales::comma)+
-  theme(legend.title = element_blank())+
+  
   scale_fill_manual(values= c("#303434", "#00aeef"))+
   theme_bw()+
-  theme(plot.title = element_text(size = rel(1.5)), text= element_text(size= 12), legend.title= element_blank(), axis.text.x = element_text(angle = 45, hjust = 1))+
-  ylim(0, 30)+
-  labs(title= "Proportion of respondents that received training by type", subtitle = "n baseline: 510, n endline:523", x= element_blank(), y= "% of respondents that received training by type")
+  # ylim(0, 30)+
+  theme(legend.title = element_blank(),
+        text= element_text(size= 12))+
+  # scale_y_continuous(labels= scales::percent_format(scale= 1))+
+  scale_y_continuous(labels = function(x) paste0(x, "%"), breaks = seq(0, 30, by = 5))+
+  coord_flip()+
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 15))+
+  labs(title= "Proportion of respondents that received training by topics", subtitle = "n baseline: 510, n endline:523", x= element_blank(), y= element_blank())
   
 
 # Percentage of respondents who got support/cash grant to establish IGAs
 
 df_beneficiaries_cash_grant <- tibble(Received_cash_grant= c("Yes", "Yes"),
-                                      Percent_received_cash_grant= c(37, 42),
-                                      Phase= c("Baseline", "Endline"))
+                                      Percent_received_cash_grant= c(42, 37),
+                                      Phase= c("Endline", "Baseline"))
 
 df_beneficiaries_cash_grant %>% 
   ggplot(aes(fill= Phase, x= fct_reorder(Received_cash_grant, -Percent_received_cash_grant) , y= Percent_received_cash_grant)) +
@@ -292,7 +337,9 @@ df_beneficiaries_cash_grant %>%
   theme(legend.title = element_blank(),
         axis.title.y = element_blank(),
         axis.text.y = element_blank(),
-        axis.ticks.y = element_blank())+
+        axis.ticks.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks = element_blank())+
   ylim(0, 50)+
   labs(title= "Proportion of respondents who received support/cash grant to establish IGAs ", subtitle = "n baseline: 510, n endline:523", x= element_blank(), y= "% of respondents who received support/cash grant to establish IGAs")
   # labs(x= element_blank() , y= "# of respondents who received support/cash grant to establish IGAs")
@@ -304,15 +351,15 @@ df_business_plan_training <- tibble(Status= c("Host", "Refugees", "Host", "Refug
                                     Phase= c("Baseline", "Baseline", "Endline", "Endline"))
 
 df_business_plan_training %>%
-  ggplot(aes(fill= Status, x= fct_reorder(Phase, -Percent_trained_business_plan) , y= Percent_trained_business_plan)) +
-  geom_bar(position = "stack", stat = "identity", width = 0.5)+
+  ggplot(aes(fill= Status, x= reorder(Phase, Percent_trained_business_plan) , y= Percent_trained_business_plan)) +
+  geom_bar(position = "dodge", stat = "identity", width = 0.5)+
   geom_text(aes(label = paste0(Percent_trained_business_plan,"%")),
-            position = position_stack(vjust = 0.5), size = 5)+
+            position = position_dodge2(width = 0.5), size = 5, vjust= -.5)+
   # scale_y_continuous(labels = scales::comma)+
   scale_fill_manual(values= c("#303434", "#00aeef"))+
   theme_bw()+
   theme(text= element_text(size= 12), legend.title= element_blank())+
-  # ylim(0, 100)+
+  ylim(0, 100)+
   theme(legend.title = element_blank(),
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank())+
@@ -333,28 +380,34 @@ df_application_skills %>%
   scale_fill_manual(values= c("#303434", "#00aeef"))+
   theme_bw()+
   theme(text= element_text(size= 12), legend.title= element_blank())+
-  # ylim(0, 100)+
+  ylim(0, 100)+
   theme(legend.title = element_blank(),
         axis.text.y = element_blank(),
-        axis.ticks.y = element_blank())+
-  labs(title= "Proportion of respondents by level of application of the skills gained in training", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= element_blank())
+        axis.ticks.y = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text.x = element_blank())+
+  labs(title= "Proportion of respondents by level of application of the skills gained \n in training", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= element_blank())
   
 
 # Effects of the trainings on the businesses of the target groups
-df_training_effect <- tibble(Effects_training= c("Increased profits","Increased profits", "Beter book keeping", "Beter book keeping", "Business is more organized than before", "Business is more organized than before", "Others", "Others"),
+df_training_effect <- tibble(Effects_training= c("Increased profits","Increased profits", "Better book keeping", "Better book keeping", "Business is more organized than before", "Business is more organized than before", "Others", "Others"),
                              Percent_effect_training= c(56, 41, 20, 34, 22, 24, 2, 1),
                              Phase= c("Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline"))
 
 df_training_effect %>% 
-  ggplot(aes(fill= Phase, x= fct_reorder(Effects_training, -Percent_effect_training) , y= Percent_effect_training)) +
+  ggplot(aes(fill= Phase, x= reorder(Effects_training, Percent_effect_training) , y= Percent_effect_training)) +
   geom_bar(position = "dodge", stat = "identity", width = 0.5)+
   scale_y_continuous(labels = scales::comma)+
-  theme(legend.title = element_blank())+
   scale_fill_manual(values= c("#303434", "#00aeef"))+
   theme_bw()+
-  theme(plot.title = element_text(size = rel(1.5)), text= element_text(size= 12), legend.title= element_blank(), axis.text.x = element_text(angle = 45, hjust = 1))+
-  ylim(0, 60)+
-  labs(title= "Proportion of respondents by effects of trainings on businesses", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= "% effect of the training on businesses")
+  # ylim(0, 60)+
+  theme(legend.title = element_blank(),
+        text= element_text(size= 12))+
+  # scale_y_continuous(labels= scales::percent_format(scale= 1))+
+  scale_y_continuous(labels = function(x) paste0(x, "%"), breaks = seq(0, 50, by = 10))+
+  coord_flip()+
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 15))+
+  labs(title= "Proportion of respondents by effects of trainings on \n businesses", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= element_blank())
   # labs(x= element_blank() , y= "% effect of the training on businesses of the target groups")
 
 # Percentage of respondents with mobile phones
@@ -370,11 +423,12 @@ df_phone_ownership %>%
   scale_y_continuous(labels = scales::comma)+
   scale_fill_manual(values= c("#303434", "#00aeef"))+
   theme_bw()+
-  # ylim(0, 80)+
+  ylim(0, 80)+
   theme(legend.title = element_blank(),
         axis.title.y = element_blank(),
         axis.ticks.y = element_blank(),
-        axis.text.y = element_blank())+
+        axis.text.y = element_blank(),
+        text = element_text(size = 12))+
   labs(title= "Proportion of respondents with mobile phones", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= element_blank())
   # labs(x= element_blank() , y= "% of respondents with mobile phones")
 
@@ -391,13 +445,14 @@ df_key_factor_limit_internet_usage %>%
   scale_y_continuous(labels = scales::comma)+
   scale_fill_manual(values= c("#303434", "#00aeef"))+
   theme_bw()+
-  theme(plot.title = element_text(size = rel(1.5)), text= element_text(size= 11), legend.title= element_blank(), axis.text.x = element_text(angle = 45, hjust = 1))+
-  # ylim(0, 60)+
+  ylim(0, 55)+
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 15))+
   theme(legend.title = element_blank(),
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.ticks = element_blank(),
-        axis.text.y = element_blank())+
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        text = element_text(size = 12))+
   labs(title= "Proportion of respondents by key factors that prevent use of internet", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= element_blank())
  
 
@@ -406,17 +461,27 @@ df_solve_problems <- tibble(Response= c("Prefer not to answer", "Prefer not to a
                             Percent_response= c(4, 0, 50, 29, 21, 49, 7, 10, 18, 12),
                             Phase= c("Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline"))
 
-df_solve_problems %>% 
-  ggplot(aes(fill= Phase, x= fct_reorder(Response, -Percent_response) , y= Percent_response)) +
-  geom_bar(position = "dodge", stat = "identity")+
+df_solve_problems %>%
+  arrange(Percent_response) %>% 
+  mutate(Response= factor(Response, levels = c("Prefer not to answer", "False", "Somewhat false", "Somewhat true", "True"))) %>% 
+  
+  ggplot(aes(fill= Response, x= reorder(Phase, Percent_response) , y= Percent_response)) +
+  geom_bar(position = "stack", stat = "identity", width = 0.2)+
+  geom_text(aes(label = paste0(Percent_response, "%"), color= "#ffffff"),
+            position = position_stack(vjust = 0.5), size = 4, show.legend = FALSE )+
+  scale_color_manual(values = c("white","black"))+
   scale_y_continuous(labels = scales::comma)+
-  theme(legend.title = element_blank())+
-  scale_fill_manual(values= c("#303434", "#00aeef"))+
+  scale_fill_manual(values= c("#303434", "#00aeef", "#e3dab8", "#a57f5d", "grey"))+
   theme_bw()+
   theme(text= element_text(size= 12), legend.title= element_blank())+
   ylim(0, 60)+
-  theme(plot.title = element_text(size = rel(1.5)), text= element_text(size= 12), legend.title= element_blank(), axis.text.x = element_text(angle = 45, hjust = 1))+
-  labs(title= "Proportion of respondents by ability to solve difficult problems", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= "% of ability to solve difficult problems")
+  theme(legend.title = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())+
+  scale_y_continuous(labels= scales::percent_format(scale= 1))+
+  coord_flip()+
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 15))+
+  labs(title= "Proportion of respondents by ability to solve \n difficult problems", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= element_blank())
   # labs(x= element_blank() , y= "% of ability to solve difficult problems")
 
 # Felt little interest or pleasure in doing things
@@ -425,35 +490,54 @@ df_interest_pleasure <- tibble(Response= c("Prefer not to answer", "Prefer not t
                                Phase= c("Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline"))
 
 df_interest_pleasure %>% 
-  ggplot(aes(fill= Phase, x= fct_reorder(Response, -Percent_response) , y= Percent_response)) +
-  geom_bar(position = "dodge", stat = "identity")+
+  arrange(Percent_response) %>% 
+  mutate(Response= factor(Response, levels = c("Prefer not to answer", "Not at all", "More than half the days", "Nearly every day", "Several days"))) %>% 
+  
+  ggplot(aes(fill= Response, x= reorder(Phase, Percent_response) , y= Percent_response)) +
+  geom_bar(position = "stack", stat = "identity", width = 0.2)+
+  geom_text(aes(label = paste0(Percent_response, "%"), color= "#ffffff"),
+            position = position_stack(vjust = 0.5), size = 5, show.legend = FALSE )+
+  scale_color_manual(values = c("white", "black"))+
   scale_y_continuous(labels = scales::comma)+
-  theme(legend.title = element_blank())+
-  scale_fill_manual(values= c("#303434", "#00aeef"))+
+  scale_fill_manual(values= c("#303434", "#00aeef", "#e3dab8", "#a57f5d", "grey"))+
   theme_bw()+
   theme(text= element_text(size= 12), legend.title= element_blank())+
   ylim(0, 50)+
-  theme(plot.title = element_text(size = rel(1.5)), text= element_text(size= 12), legend.title= element_blank(), axis.text.x = element_text(angle = 45, hjust = 1))+
-  labs(title= "Proportion of respondents by pleasure in doing things", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= "% of interest or pleasure in doing things")
+  theme(legend.title = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())+
+  scale_y_continuous(labels= scales::percent_format(scale= 1))+
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 15))+coord_flip()+
+  labs(title= "Proportion of respondents by pleasure in doing things", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= element_blank())
   # labs(x= element_blank() , y= "% of interest or pleasure in doing things")
+
 
 # Felt tired or had little energy
 df_tired_little_energy <- tibble(Response= c("Prefer not to answer", "Prefer not to answer", "Nearly every day", "Nearly every day", "More than half the days", "More than half the days", "Several days", "Several days", "Not at all", "Not at all"),
                                  Percent_response= c(1, 1, 8, 20, 14, 14, 27, 32, 50, 33),
                                  Phase= c("Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline"))
 
-df_tired_little_energy %>% 
-  ggplot(aes(fill= Phase, x= fct_reorder(Response, -Percent_response) , y= Percent_response)) +
-  geom_bar(position = "dodge", stat = "identity")+
-  scale_y_continuous(labels = scales::comma)+
-  theme(legend.title = element_blank())+
-  scale_fill_manual(values= c("#303434", "#00aeef"))+
-  theme_bw()+
-  theme(plot.title = element_text(size = rel(1.5)), text= element_text(size= 12), legend.title= element_blank(), axis.text.x = element_text(angle = 45, hjust = 1))+
-  ylim(0, 60)+
-  labs(title= "Proportion of respondents by level of feeling tired or little energy", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= "% of respondents who felt tired or had little energy")
+df_tired_little_energy %>%
+  arrange(Percent_response) %>% 
+  mutate(Response= factor(Response, levels = c("Prefer not to answer", "Not at all", "More than half the days", "Nearly every day", "Several days"))) %>% 
   
-
+  
+  
+  ggplot(aes(fill= Response, x= fct_reorder(Phase, -Percent_response), y= Percent_response)) +
+  geom_bar(position = "stack", stat = "identity", width = 0.2)+
+  geom_text(aes(label = paste0(Percent_response, "%"), color= "#ffffff"),
+            position = position_stack(vjust = 0.5), size = 5, show.legend = FALSE )+
+  scale_color_manual(values = c("white", "black"))+
+  scale_y_continuous(labels = scales::comma)+
+  scale_fill_manual(values= c("#303434", "#00aeef", "#e3dab8", "#a57f5d", "grey"))+
+  theme_bw()+
+  ylim(0, 60)+
+  theme(legend.title = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())+
+  scale_y_continuous(labels= scales::percent_format(scale= 1))+
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 15))+coord_flip()+
+  labs(title= "Proportion of respondents by level of feeling tired \n or little energy", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= element_blank())
 
 
 
