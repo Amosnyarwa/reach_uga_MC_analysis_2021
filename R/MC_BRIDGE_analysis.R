@@ -49,7 +49,7 @@ df_agric_enterprise %>%
         axis.title.y = element_blank(),
         text= element_text(size= 12))+
   scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 15))+
-  labs(title= "Percentage of respondents by agricultural enterprises \n or activities practiced", subtitle = "n baseline: 326, n endline:527", x= element_blank(), y= element_blank())
+  labs(title= "Percentage of respondents by agricultural enterprises \nor activities practiced", subtitle = "n baseline: 326, n endline:527", x= element_blank(), y= element_blank())
   
 
 # Level of practicing agricultural production
@@ -84,6 +84,7 @@ df_agric_production_level %>%
 df_amount_agric_products_produced <- tibble(Response= c("Simsim", "Simsim", "Groundnuts", "Groundnuts", "Maize", "Maize", "Beans", "Beans", "Others", "Others"),
                                    Average_amount_kgs= c(93.3, 248.7, 139.3, 179.3, 84.6, 91.8, 48.3, 50, 118.6, 123.2),
                                    Phase= c("Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline", "Baseline", "Endline" ))
+
 
 df_amount_agric_products_produced %>%
   arrange(Average_amount_kgs) %>% 
@@ -122,7 +123,7 @@ df_amount_agric_products_sold %>%
         axis.title.x = element_blank(),
         text= element_text(size= 12))+
   coord_flip()+
-  labs(title= "Average total amount (in UGX) of agricultural products sold \n to the market", subtitle = "n baseline: 211, n endline:365", x= element_blank(), y= "Average amount in UGX")+
+  labs(title= "Average total amount (in UGX) of agricultural products sold \nto the market", subtitle = "n baseline: 211, n endline:365", x= element_blank(), y= "Average amount in UGX")+
   scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 15))
   
   
@@ -492,7 +493,7 @@ df_solve_problems %>%
   scale_y_continuous(labels= scales::percent_format(scale= 1))+
   coord_flip()+
   scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 15))+
-  labs(title= "Proportion of respondents by ability to solve \n difficult problems", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= element_blank())
+  labs(title= "Proportion of respondents by ability to solve \ndifficult problems", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= element_blank())
   # labs(x= element_blank() , y= "% of ability to solve difficult problems")
 
 # Felt little interest or pleasure in doing things
@@ -550,7 +551,7 @@ df_tired_little_energy %>%
         legend.position="bottom")+
   scale_y_continuous(labels= scales::percent_format(scale= 1))+
   scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 15))+coord_flip()+
-  labs(title= "Proportion of respondents by level of feeling tired \n or little energy", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= element_blank())
+  labs(title= "Proportion of respondents by level of feeling tired \nor little energy", subtitle = "n baseline: 102, n endline:121", x= element_blank(), y= element_blank())
 
 
 
